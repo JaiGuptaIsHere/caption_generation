@@ -79,9 +79,22 @@ app.use((req, res) => {
   })
 })
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
-  console.log(`📁 Uploads directory: ${path.join(__dirname, '../uploads')}`)
-  console.log(`🎬 Outputs directory: ${path.join(__dirname, '../outputs')}`)
-  console.log(`🌍 Environment: ${process.env.NODE_ENV}`)
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('='.repeat(50))
+  console.log(`🚀 Server running on port ${PORT}`)
+  console.log(`📁 Uploads: ${path.join(__dirname, '../uploads')}`)
+  console.log(`🎬 Outputs: ${path.join(__dirname, '../outputs')}`)
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+  console.log(`✅ Server is ready`)
+  console.log('='.repeat(50))
+})
+
+// Handle errors
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection:', reason)
 })
