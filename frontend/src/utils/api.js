@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://caption-generation-h0he.onrender.com'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://caption-generation-h0he.onrender.com/api'
 
 export const transcribeVideo = async (videoFile) => {
   const formData = new FormData()
