@@ -12,6 +12,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "multer": "^1.4.5-lts.1",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "openai": "^4.67.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
   }
 }
