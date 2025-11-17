@@ -1,9 +1,11 @@
+// backend/src/routes/transcribe.js
 import express from 'express'
 import multer from 'multer'
 import { transcribeVideo } from '../controllers/transcribeController.js'
 
 const router = express.Router()
 
+// Memory storage for processing
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {

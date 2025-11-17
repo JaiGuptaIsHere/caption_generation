@@ -1,13 +1,11 @@
+// backend/src/server.js
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import uploadRoutes from './routes/upload.js'
-import transcribeRoutes from './routes/transcribe.js'
-import renderRoutes from './routes/render.js'
-import statusRoutes from './routes/status.js'
-
+import transcribeRoutes from './routes/transcribe.js'  // ✅ Real AI version
 
 dotenv.config()
 
@@ -17,51 +15,62 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 5000
 
-app.use('/api/status', statusRoutes)
-
+// CORS
 const allowedOrigins = [
-  'http://localhost:5173',  
-  'https://caption-generation-dusky.vercel.app',  
+  'http://localhost:5173',
+  'https://caption-generation-dusky.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean)
 
 app.use(cors({
   origin: function(origin, callback) {
     if (!origin) return callback(null, true)
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.'
-      return callback(new Error(msg), false)
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
     }
-    return callback(null, true)
   },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  credentials: true
 }))
-
-app.options('*', cors())
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// Serve static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 app.use('/outputs', express.static(path.join(__dirname, '../outputs')))
 
+// Routes
 app.use('/api/upload', uploadRoutes)
-app.use('/api/transcribe', transcribeRoutes)
-app.use('/api/render', renderRoutes)
+app.use('/api/transcribe', transcribeRoutes)  // ✅ Real AI
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Caption Backend API',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      transcribe: '/api/transcribe',
+      upload: '/api/upload'
+    }
+  })
+})
+
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'Caption backend is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   })
 })
 
+// Error handling
 app.use((err, req, res, next) => {
-  console.error('Error:', err.stack)
+  console.error('❌ Error:', err.stack)
   res.status(err.status || 500).json({
     error: {
       message: err.message || 'Internal Server Error',
@@ -70,6 +79,7 @@ app.use((err, req, res, next) => {
   })
 })
 
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     error: {
@@ -79,7 +89,7 @@ app.use((req, res) => {
   })
 })
 
-
+// Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log('='.repeat(50))
   console.log(`🚀 Server running on port ${PORT}`)
@@ -90,7 +100,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('='.repeat(50))
 })
 
-// Handle errors
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error)
 })

@@ -1,3 +1,4 @@
+// backend/src/controllers/transcribeController.js
 import { generateCaptionsLocal } from '../services/whisperLocalService.js'
 import { generateCaptions, isOpenAIConfigured } from '../services/whisperService.js'
 import fs from 'fs-extra'
@@ -18,17 +19,20 @@ export const transcribeVideo = async (req, res) => {
     console.log('📹 Transcribing video:', req.file.originalname)
     console.log('📊 File size:', (req.file.size / (1024 * 1024)).toFixed(2), 'MB')
 
+    // Save temp file
     const tempDir = path.join(__dirname, '../../uploads/temp')
     await fs.ensureDir(tempDir)
     
     tempFilePath = path.join(tempDir, `temp-${Date.now()}.mp4`)
     await fs.writeFile(tempFilePath, req.file.buffer)
 
+    console.log('💾 Temp file saved')
+
     let captions
     let method = 'local'
     let processingTime = 0
 
-    
+    // Hybrid approach: Try OpenAI API first, fallback to local
     if (isOpenAIConfigured()) {
       try {
         console.log('🔄 Attempting OpenAI Whisper API...')
@@ -42,7 +46,7 @@ export const transcribeVideo = async (req, res) => {
         console.log(`✅ Used OpenAI API (${processingTime}s)`)
         
       } catch (apiError) {
-        console.error('⚠️ OpenAI API failed:', apiError.message)
+        console.error('⚠️ OpenAI API Error:', apiError.message)
         
         if (apiError.message.includes('QUOTA_EXCEEDED') || 
             apiError.message.includes('INVALID_KEY') ||
@@ -57,7 +61,7 @@ export const transcribeVideo = async (req, res) => {
           
           console.log(`✅ Used local Whisper as fallback (${processingTime}s)`)
         } else {
-          throw apiError  
+          throw apiError
         }
       }
     } else {
@@ -71,6 +75,7 @@ export const transcribeVideo = async (req, res) => {
       console.log(`✅ Used local Whisper (${processingTime}s)`)
     }
 
+    // Clean up
     await fs.remove(tempFilePath)
 
     res.json({
@@ -95,8 +100,7 @@ export const transcribeVideo = async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: 'Failed to generate captions',
-      details: error.message,
-      suggestion: 'Try with a shorter video or check backend logs'
+      details: error.message
     })
   }
 }
